@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>FIRST STEP ID Card Registration Form</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Google reCAPTCHA -->
+    <script src="https://www.google.com/recaptcha/enterprise.js?render=6LcPQgoqAAAAAN5q1ycjY80bFTWrh3YSZN19Gru3"></script>
+    <style>
+        body {
+            padding-top: 70px; /* Adjust padding to accommodate fixed header */
+            padding-bottom: 20px;
+            position: relative; /* Needed for absolute positioning of overlay */
+        }
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background-color: rgb(9, 182, 212); /* Light yellow background color */
+            color: #ffffff; /* White text color */
+            z-index: 1000; /* Ensure header stays above content */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Optional: Add shadow for depth */
+        }
+        .form-container {
+            margin-top: 90px; /* Ensure content starts below fixed header */
+        }
+        .form-label {
+            font-weight: bold;
+        }
+        /* Add mobile-specific styles */
+        @media (max-width: 768px) {
+            .form-group {
+                margin-bottom: 20px;
+            }
+            .form-control {
+                font-size: 16px;
+            }
+            .btn {
+                font-size: 18px;
+            }
+        }
+
+        /* Loading overlay styles */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent white background */
+            z-index: 999; /* Ensure overlay stays above everything */
+            display: none; /* Initially hidden */
+        }
+
+        .overlay-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 class="text-center">FSPS Id Card Form</h1>
+        </div>
+    </header>
+    <div class="form-container container">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert-container">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('submit') }}" method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
+            <div class="form-group">
+                <label for="name" class="form-label">Child's Name:</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="class" class="form-label">Class:</label>
+                <select class="form-control" id="class" name="class" required>
+                    <option value="Pre Nursery">Pre Nursery</option>
+                    <option value="Nursery">Nursery</option>
+                    <option value="LKG">LKG</option>
+                    <option value="UKG">UKG</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="fathers_name" class="form-label">Father's Name:</label>
+                <input type="text" class="form-control" id="fathers_name" name="fathers_name" required>
+            </div>
+            <div class="form-group">
+                <label for="address" class="form-label">Address:</label>
+                <input type="text" class="form-control" id="address" name="address" required>
+            </div>
+            <div class="form-group">
+                <label for="mothers_name" class="form-label">Mother's Name:</label>
+                <input type="text" class="form-control" id="mothers_name" name="mothers_name" required>
+            </div>
+            <div class="form-group">
+                <label for="fathers_mobile" class="form-label">Father's Mobile:</label>
+                <input type="tel" class="form-control" id="fathers_mobile" name="fathers_mobile" pattern="[0-9]{10}" required>
+            </div>
+            <div class="form-group">
+                <label for="mothers_mobile" class="form-label">Mother's Mobile:</label>
+                <input type="tel" class="form-control" id="mothers_mobile" name="mothers_mobile" pattern="[0-9]{10}" required>
+            </div>
+            <div class="form-group">
+                <label for="emergency_contact" class="form-label">Emergency Contact:</label>
+                <input type="tel" class="form-control" id="emergency_contact" name="emergency_contact" pattern="[0-9]{10}" required>
+            </div>
+            
+            <!-- Sample Images -->
+           <!-- Sample Images -->
+<div class="form-group">
+    <label for="example_images" class="form-label">Sample Images:</label>
+    <div class="row justify-content-center">
+        <div class="col-md-3 col-sm-6 text-center mb-3">
+            <img src="{{ url_for('fetch_file', filename='childexample1.jpeg') }}" alt="Sample Child Image" class="img-thumbnail" style="max-height: 150px;">
+            <p class="small text-muted">Child Photo Example</p>
+        </div>
+        <div class="col-md-3 col-sm-6 text-center mb-3">
+            <img src="{{ url_for('fetch_file', filename='childimageexample2.png') }}" alt="Sample Child Image" class="img-thumbnail" style="max-height: 150px;">
+            <p class="small text-muted">Child Photo Example</p>
+        </div>
+        <div class="col-md-3 col-sm-6 text-center mb-3">
+            <img src="{{ url_for('fetch_file', filename='childmotherexample.png') }}" alt="Sample Father Image" class="img-thumbnail" style="max-height: 150px;">
+            <p class="small text-muted">Father Photo Example</p>
+        </div>
+        <div class="col-md-3 col-sm-6 text-center mb-3">
+            <img src="{{ url_for('fetch_file', filename='fatherexample.png') }}" alt="Sample Mother Image" class="img-thumbnail" style="max-height: 150px;">
+            <p class="small text-muted">Mother Photo Example</p>
+        </div>
+    </div>
+</div>
+
+            <!-- File upload fields -->
+            <div class="form-group">
+                <label for="child_photo" class="form-label">Upload Child's Photo:</label>
+                <input type="file" class="form-control-file" id="child_photo" name="child_photo" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label for="father_photo" class="form-label">Upload Father's Photo:</label>
+                <input type="file" class="form-control-file" id="father_photo" name="father_photo" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label for="mother_photo" class="form-label">Upload Mother's Photo:</label>
+                <input type="file" class="form-control-file" id="mother_photo" name="mother_photo" accept="image/*" required>
+            </div>
+            <div class="overlay" id="loadingOverlay">
+                <div class="overlay-content">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <p>Submitting details...</p>
+                </div>
+            </div>
+        
+            <form action="{{ url_for('submit') }}" method="post" enctype="multipart/form-data" onsubmit="return handleSubmit()">
+                <!-- Form fields as before -->
+        
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </form>
+    </div>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+    function handleSubmit() {
+        // Show loading overlay when form is submitted
+        document.getElementById('loadingOverlay').style.display = 'block';
+        return true; // Allow form submission to continue
+    }
+        function validateForm() {
+            // reCAPTCHA validation
+            var recaptchaResponse = grecaptcha.getResponse();
+            if (recaptchaResponse.length == 0) {
+                alert("Please complete the reCAPTCHA.");
+                return false;
+            }
+
+            // Field validation for special characters
+            var fields = ['name', 'fathers_name', 'others_name', 'address'];
+            var specialCharPattern = /[^a-zA-Z0-9\s]/;
+
+            for (var i = 0; i < fields.length; i++) {
+                var field = document.getElementById(fields[i]);
+                if (specialCharPattern.test(field.value)) {
+                    alert("Please remove special characters from the ${fields[i].replace('_', ')} field.");
+                    return false;
+                }
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>
