@@ -21,6 +21,16 @@ app.config["MONGO_URI"]  = app.config["MONGO_URI"].replace('"', '')
 print(app.config["MONGO_URI"].replace('"', ''))
 # Initialize PyMongo and GridFS
 mongo = PyMongo(app)
+
+# Verify the connection and database
+try:
+    mongo.cx.server_info()  # Will throw an exception if the server is not reachable
+    print("MongoDB connection successful.")
+    print("Databases:", mongo.cx.list_database_names())
+    db = mongo.cx.get_database("school")
+    print("Collections:", db.list_collection_names())
+except Exception as e:
+    print(f"Error connecting to MongoDB: {e}")
 fs = gridfs.GridFS(mongo.cx.get_database("school"))
 
 # Set the directory for uploaded files
