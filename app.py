@@ -8,18 +8,23 @@ from werkzeug.utils import secure_filename
 import re
 app = Flask(__name__)
 
+
 # Set a secret key for flash messages
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "your_default_secret_key")
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "your_default_secret_key")
 
 # Configure MongoDB URI
-app.config["MONGO_URI"] = os.getenv("MONGO_URI")
-
+app.config["MONGO_URI"] = os.environ.get("MONGO_URI","mongodb://localhost:27017/school?retryWrites=true&w=majority")
+if not app.config["MONGO_URI"]:
+    raise ValueError("MONGO_URI is not set in environment variables.")
+print(app.config["MONGO_URI"])
+app.config["MONGO_URI"]  = app.config["MONGO_URI"].replace('"', '')
+print(app.config["MONGO_URI"].replace('"', ''))
 # Initialize PyMongo and GridFS
 mongo = PyMongo(app)
 fs = gridfs.GridFS(mongo.cx.get_database("school"))
 
 # Set the directory for uploaded files
-app.config["UPLOAD_FOLDER"] = os.getenv("UPLOAD_FOLDER", "upload")
+app.config["UPLOAD_FOLDER"] = os.environ.get("UPLOAD_FOLDER", "upload")
 
 @app.route('/')
 def index():
@@ -32,6 +37,12 @@ def fetch_file(filename):
     except FileNotFoundError:
         return "File not found", 404
 
+
+
+# Function to check if entry exists
+def entry_exists(name, class_name):
+    existing_entry = mongo.db.children.find_one({"name": name, "class": class_name})
+    return existing_entry is not None
 
 @app.route('/submit', methods=['POST'])
 def submit():
@@ -47,6 +58,11 @@ def submit():
     child_photo = request.files['child_photo']
     father_photo = request.files['father_photo']
     mother_photo = request.files['mother_photo']
+
+    # Check if entry already exists
+    if entry_exists(name, class_name):
+        flash("An ID card for this child with similar details already exists.", "error")
+        return redirect(url_for('index'))
 
     # Validate file sizes (max 500 KB)
     max_file_size = 500 * 1024  # 500 KB in bytes
@@ -69,11 +85,12 @@ def submit():
     father_photo_filename = construct_filename(name, fathers_name)
     mother_photo_filename = construct_filename(name, mothers_name)
 
-    # Store files in GridFS
+    # Store files in GridFS (mocked)
     child_photo_id = fs.put(child_photo.read(), filename=child_photo_filename, content_type=child_photo.content_type) if child_photo else None
     father_photo_id = fs.put(father_photo.read(), filename=father_photo_filename, content_type=father_photo.content_type) if father_photo else None
     mother_photo_id = fs.put(mother_photo.read(), filename=mother_photo_filename, content_type=mother_photo.content_type) if mother_photo else None
 
+    # Example data for template rendering
     child_data = {
         "name": name,
         "class": class_name,
@@ -91,10 +108,12 @@ def submit():
         "mother_photo_original_filename": mother_photo.filename if mother_photo else None
     }
 
+    # Insert data into MongoDB (mocked)
     mongo.db.children.insert_one(child_data)
 
-    flash("Registration successful.", "success")
-    return redirect(url_for('index'))
+    # Redirect to the ID card view with the populated details
+    return render_template('id_card.html', **child_data)
+
 import bson 
 @app.route('/uploads/<file_id>')
 def uploaded_file(file_id):
@@ -131,3 +150,4 @@ def test_mongo():
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
+

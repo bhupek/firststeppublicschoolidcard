@@ -75,7 +75,7 @@
             {% if messages %}
                 <div class="alert-container">
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <div class="alert alert-{{ category }} alert-dismissible fade show alert-danger" role="alert">
                             {{ message }}
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
@@ -85,7 +85,7 @@
                 </div>
             {% endif %}
         {% endwith %}
-
+ 
         <form action="{{ url_for('submit') }}" method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
             <div class="form-group">
                 <label for="name" class="form-label">Child's Name:</label>
@@ -98,6 +98,11 @@
                     <option value="Nursery">Nursery</option>
                     <option value="LKG">LKG</option>
                     <option value="UKG">UKG</option>
+                    <option value="1st Class">Class 1 </option>
+                    <option value="2nd Class">Class 2 </option>
+                    <option value="3rd Class">Class 3 </option>
+                    <option value="4th Class">Class 4 </option>
+                    <option value="5th Class">Class 5 </option>
                 </select>
             </div>
             <div class="form-group">

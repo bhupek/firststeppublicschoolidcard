@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ID Cards</title>
+    <style>
+        body {
+            background-color: #1f1f1f;
+            font-family: 'Verdana', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+    
+        .id-card-holder {
+            width: 225px;
+            padding: 4px;
+            margin: 0 20px;
+            background-color: #1f1f1f;
+            border-radius: 5px;
+            position: relative;
+        }
+    
+        .id-card {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 1.5px 0px #b9b9b9;
+            margin-bottom: 20px;
+        }
+    
+        .id-card img {
+            margin: 0 auto;
+            width: 100%; /* Take full width of parent container */
+            height: auto; /* Maintain aspect ratio */
+            border-radius: 10px 10px 0 0; /* Rounded corners */
+        }
+    
+        .photo {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            border-radius: 10px 10px 0 0;
+        }
+    
+        .photo img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 100%;
+            height: auto;
+        }
+    
+        .name {
+            position: relative;
+            z-index: 2;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: -20px;
+            font-size: 18px;
+            color: black;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+    
+        h3 {
+            font-size: 12px;
+            margin: 2.5px 0;
+            font-weight: 300;
+        }
+    
+        p {
+            font-size: 10px;
+            margin: 2px;
+        }
+    
+        .id-card-hook {
+            background-color: black;
+            width: 70px;
+            margin: 0 auto;
+            height: 15px;
+            border-radius: 5px 5px 0 0;
+        }
+    
+        .id-card-hook:after {
+            content: '';
+            background-color: white;
+            width: 47px;
+            height: 6px;
+            display: block;
+            margin: 0px auto;
+            position: relative;
+            top: 6px;
+            border-radius: 4px;
+        }
+    
+        .id-card-tag-strip {
+            width: 45px;
+            height: 40px;
+            background-color: #d9300f;
+            margin: 0 auto;
+            border-radius: 5px;
+            position: relative;
+            top: 9px;
+            z-index: 1;
+            border: 1px solid #a11a00;
+        }
+    
+        .id-card-tag-strip:after {
+            content: '';
+            display: block;
+            width: 100%;
+            height: 1px;
+            background-color: #a11a00;
+            position: relative;
+            top: 10px;
+        }
+    
+        .id-card-tag {
+            width: 0;
+            height: 0;
+            border-left: 100px solid transparent;
+            border-right: 100px solid transparent;
+            border-top: 100px solid #d9300f;
+            margin: -10px auto -30px auto;
+        }
+    
+        .id-card-tag:after {
+            content: '';
+            display: block;
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-top: 100px solid white;
+            margin: -10px auto -30px auto;
+            position: relative;
+            top: -130px;
+            left: -50px;
+        }
+    </style>
+    
+</head>
+<body>
+    <div style="color:white"> Sample Representation(ID card would be different) </div>
+    <!-- Child ID Card -->
+    <div class="id-card-holder">
+        <div class="id-card">
+            <strong>First Step Public School</strong>
+            <div class="photo">
+                <img src="{{ url_for('uploaded_file', file_id=child_photo_id) }}" alt="Child Photo">
+            </div>
+            <div class="name">
+                {{ name }}
+            </div>
+            <h3>Student</h3>
+            <h3>{{ class }}</h3>
+            <hr>
+           
+        </div>
+    </div>
+
+    <!-- Father ID Card -->
+    <div class="id-card-holder">
+        <strong>First Step Public School</strong>
+        <div class="id-card">
+            <div class="photo">
+                <img src="{{ url_for('uploaded_file', file_id=father_photo_id) }}" alt="Father Photo">
+            </div>
+            <div class="name">
+                {{ fathers_name }}
+            </div>
+            <h3>Father</h3>
+            <hr>
+          
+            {{ address }}</p>
+            <p>Ph: {{ fathers_mobile }}</p>
+        </div>
+    </div>
+
+    <!-- Mother ID Card -->
+    <div class="id-card-holder">
+        <div class="id-card">
+            <strong>First Step Public School</strong>
+            <div class="photo">
+                <img src="{{ url_for('uploaded_file', file_id=mother_photo_id) }}" alt="Mother Photo">
+            </div>
+            <div class="name">
+                {{ mothers_name }}
+            </div>
+            <h3>Mother</h3>
+            <p>Ph: {{ mothers_mobile }}</p>
+            <p>Address {{ address }}</p>
+            <hr>
+           
+           
+            
+        </div>
+    </div>
+</body>
+</html>
