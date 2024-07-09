@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,26 +6,28 @@
     <title>FIRST STEP ID Card Registration Form</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <!-- Google reCAPTCHA -->
     <script src="https://www.google.com/recaptcha/enterprise.js?render=6LcI6wsqAAAAAHjPpV4dBcAdBVbKx54AOtmXD9IY"></script>
     <style>
         body {
-            padding-top: 70px; /* Adjust padding to accommodate fixed header */
+            padding-top: 70px;
             padding-bottom: 20px;
-            position: relative; /* Needed for absolute positioning of overlay */
+            position: relative;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
         }
         header {
             position: fixed;
             top: 0;
             width: 100%;
             color:white;
-            box-shadow: 1em 2px 4px rgb(202, 200, 200);
-            background-color: green;/* Light yellow background color */
-            z-index: 1000; /* Ensure header stays above content */
-            /* box-shadow: 1 2px 4px rgba(0,0,0,0.1); Optional: Add shadow for depth */
+            background-color: #d5d3d9;
+            z-index: 1000;
         }
         .form-container {
-            margin-top: 90px; /* Ensure content starts below fixed header */
+            margin-top: 90px;
         }
         .form-label {
             font-weight: bold;
@@ -42,45 +44,46 @@
                 font-size: 18px;
             }
         }
-
         /* Loading overlay styles */
         .overlay {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 999; /* Ensure overlay stays above everything */
-            display: none; /* Initially hidden */
+            z-index: 999;
+            background-color: rgba(0, 0, 0, 0.5); /* semi-transparent background */
+            display: none;
         }
-
         .overlay-content {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
+            color: white;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            margin-bottom: 1rem;
         }
         .logo {
-    width: 50px; /* Default size for desktop */
-    height: auto;
-    margin-right: 10px;
-}
-
-@media (max-width: 768px) {
-    .logo {
-        width: 30px; /* Smaller size for mobile */
-    }
-}
-
-.text-center {
-    margin-left: 10px; /* Adjust the spacing as needed */
-}
-body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
+            width: 50px;
+            height: auto;
+            margin-right: 10px;
         }
-       
+        @media (max-width: 768px) {
+            .logo {
+                width: 30px;
+            }
+        }
+        .text-center {
+            margin-left: 10px;
+        }
+        .instruction-text {
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -90,8 +93,7 @@ body {
                 <img src="{{ url_for('fetch_file', filename='logo.PNG') }}" alt="School Logo" class="logo">
                 <h1 class="text-center ml-3">FSPS Id Card Form</h1>
             </div>
-            
-                   </div>
+        </div>
     </header>
     <div class="form-container container">
         <!-- Flash messages -->
@@ -109,7 +111,7 @@ body {
                 </div>
             {% endif %}
         {% endwith %}
- 
+
         <div class="instruction-section">
             <h3>Photo Requirements:</h3>
             <ul>
@@ -117,7 +119,7 @@ body {
                 <li><i class="fas fa-camera"></i> <span class="instruction-text">Photos of mother and father should be clear and recognizable.</span></li>
             </ul>
         </div>
-    
+
         <div class="instruction-section">
             <h3>Information Completeness:</h3>
             <ul>
@@ -125,17 +127,19 @@ body {
                 <li><i class="fas fa-check-circle"></i> <span class="instruction-text">Double-check for accuracy in names, contact details, and emergency information.</span></li>
             </ul>
         </div>
-    
+
         <div class="instruction-section">
             <h3>File Size and Format:</h3>
             <ul>
                 <li><i class="fas fa-file-image"></i> <span class="instruction-text">Upload photos in specified formats (e.g., PNG, JPEG).</span></li>
                 <li><i class="fas fa-file-image"></i> <span class="instruction-text">Ensure each file size does not exceed the specified limit (e.g., 500 KB).</span></li>
             </ul>
-        </div>        <form action="{{ url_for('submit') }}" method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
+        </div>
+
+        <form id="idCardForm" action="{{ url_for('submit') }}" method="post" enctype="multipart/form-data" onsubmit="return handleSubmit()">
             <div class="form-group">
                 <label for="name" class="form-label">Child's Name(Full Name):</label>
-                <input type="text" placeholder="Child Full Name" class="form-control" id="name" name="name" required>
+                <input type="text" placeholder="Child Full Name"  maxlength="100" class="form-control" id="name" name="name" required>
             </div>
             <div class="form-group">
                 <label for="class" class="form-label">Class:</label>
@@ -153,66 +157,66 @@ body {
             </div>
             <div class="form-group">
                 <label for="fathers_name" class="form-label">Father's Name(Full Name):</label>
-                <input type="text" class="form-control" id="fathers_name" name="fathers_name" placeholder="Father Name" required>
+                <input type="text" class="form-control" id="fathers_name" maxlength="100" name="fathers_name" placeholder="Father Name" required>
             </div>
             <div class="form-group">
                 <label for="address" class="form-label">Address(Full Address):</label>
-                <textarea type="text" class="form-control" id="address" name="address" placeholder="Present Residence Address" required></textarea>
+                <textarea type="text" class="form-control" id="address" maxlength="500" name="address" placeholder="Present Residence Address" required></textarea>
             </div>
             <div class="form-group">
                 <label for="mothers_name" class="form-label">Mother's Name:</label>
-                <input type="text" class="form-control" id="mothers_name" name="mothers_name" placeholder="Mothers Name" required>
+                <input type="text" class="form-control" id="mothers_name" maxlength="100" name="mothers_name" placeholder="Mothers Name" required>
             </div>
             <div class="form-group">
                 <label for="fathers_mobile" class="form-label">Father's Mobile:</label>
-                <input type="tel" class="form-control" id="fathers_mobile" placeholder="Father Mobile Number" name="fathers_mobile" pattern="[0-9]{10}" required>
+                <input type="tel" class="form-control" id="fathers_mobile"   placeholder="Father Mobile Number" name="fathers_mobile" pattern="[0-9]{10}" required>
             </div>
             <div class="form-group">
                 <label for="mothers_mobile" class="form-label">Mother's Mobile:</label>
-                <input type="tel" class="form-control" id="mothers_mobile" placeholder="Mother Mobile Number" name="mothers_mobile" pattern="[0-9]{10}" required>
+                <input type="tel" class="form-control" id="mothers_mobile"  placeholder="Mother Mobile Number" name="mothers_mobile" pattern="[0-9]{10}" required>
             </div>
             <div class="form-group">
                 <label for="emergency_contact" class="form-label">Emergency Contact(different from Father and Mother Mobile Number):</label>
                 <input type="tel" class="form-control" id="emergency_contact" name="emergency_contact" placeholder="Emergency Phone Number" pattern="[0-9]{10}" required>
             </div>
-            
+
             <!-- Sample Images -->
-           <!-- Sample Images -->
-<div class="form-group">
-    <label for="example_images" class="form-label">Sample Images:</label>
-    <div class="row justify-content-center">
-        <div class="col-md-3 col-sm-6 text-center mb-3">
-            <img src="{{ url_for('fetch_file', filename='childexample1.jpeg') }}" alt="Sample Child Image" class="img-thumbnail" style="max-height: 150px;">
-            <p class="small text-muted">Child Photo Example</p>
-        </div>
-        <div class="col-md-3 col-sm-6 text-center mb-3">
-            <img src="{{ url_for('fetch_file', filename='childimageexample2.png') }}" alt="Sample Child Image" class="img-thumbnail" style="max-height: 150px;">
-            <p class="small text-muted">Child Photo Example</p>
-        </div>
-        <div class="col-md-3 col-sm-6 text-center mb-3">
-            <img src="{{ url_for('fetch_file', filename='childmotherexample.png') }}" alt="Sample Father Image" class="img-thumbnail" style="max-height: 150px;">
-            <p class="small text-muted">Father Photo Example</p>
-        </div>
-        <div class="col-md-3 col-sm-6 text-center mb-3">
-            <img src="{{ url_for('fetch_file', filename='fatherexample.png') }}" alt="Sample Mother Image" class="img-thumbnail" style="max-height: 150px;">
-            <p class="small text-muted">Mother Photo Example</p>
-        </div>
-    </div>
-</div>
+            <div class="form-group">
+                <label for="example_images" class="form-label">Sample Images:</label>
+                <div class="row justify-content-center">
+                    <div class="col-md-3 col-sm-6 text-center mb-3">
+                        <img src="{{ url_for('fetch_file', filename='childexample1.jpeg') }}" alt="Sample Child Image" class="img-thumbnail" style="max-height: 150px;">
+                        <p class="small text-muted">Child Photo Example</p>
+                    </div>
+                    <div class="col-md-3 col-sm-6 text-center mb-3">
+                        <img src="{{ url_for('fetch_file', filename='childimageexample2.png') }}" alt="Sample Child Image" class="img-thumbnail" style="max-height: 150px;">
+                        <p class="small text-muted">Child Photo Example</p>
+                    </div>
+                    <div class="col-md-3 col-sm-6 text-center mb-3">
+                        <img src="{{ url_for('fetch_file', filename='fatherexample.png') }}" alt="Sample Father Image" class="img-thumbnail" style="max-height: 150px;">
+                        <p class="small text-muted">Father Photo Example</p>
+                    </div>
+                    <div class="col-md-3 col-sm-6 text-center mb-3">
+                        <img src="{{ url_for('fetch_file', filename='childmotherexample.png') }}" alt="Sample Mother Image" class="img-thumbnail" style="max-height: 150px;">
+                        <p class="small text-muted">Mother Photo Example</p>
+                    </div>
+                </div>
+            </div>
 
             <!-- File upload fields -->
             <div class="form-group">
                 <label for="child_photo" class="form-label">Upload Child's Photo:</label>
-                <input type="file" class="form-control-file" id="child_photo" name="child_photo" accept="image/*" required>
+                <input type="file" class="form-control-file" required id="child_photo" name="child_photo" accept="image/*" onchange="validateFileSize(this, 500)">
             </div>
             <div class="form-group">
                 <label for="father_photo" class="form-label">Upload Father's Photo:</label>
-                <input type="file" class="form-control-file" id="father_photo" name="father_photo" accept="image/*" required>
+                <input type="file" class="form-control-file"  required id="father_photo" name="father_photo" accept="image/*" onchange="validateFileSize(this, 500)">
             </div>
             <div class="form-group">
                 <label for="mother_photo" class="form-label">Upload Mother's Photo:</label>
-                <input type="file" class="form-control-file" id="mother_photo" name="mother_photo" accept="image/*" required>
+                <input type="file" class="form-control-file"  required id="mother_photo" name="mother_photo" accept="image/*" onchange="validateFileSize(this, 500)">
             </div>
+
             <div class="overlay" id="loadingOverlay">
                 <div class="overlay-content">
                     <div class="spinner-border text-primary" role="status">
@@ -221,24 +225,37 @@ body {
                     <p>Submitting details...</p>
                 </div>
             </div>
-        
-            <form action="{{ url_for('submit') }}" method="post" enctype="multipart/form-data" onsubmit="return handleSubmit()">
-                <!-- Form fields as before -->
-        
-                <button type="submit" class="btn btn-primary">Submit</button>
-            </form>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
         </form>
     </div>
+
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+
     <script>
-    function handleSubmit() {
-        // Show loading overlay when form is submitted
-        document.getElementById('loadingOverlay').style.display = 'block';
-        return true; // Allow form submission to continue
-    }
+        function validateFileSize(input, maxSizeKB) {
+            if (input.files && input.files[0]) {
+                var fileSize = input.files[0].size / 1024; // in KB
+                if (fileSize > maxSizeKB) {
+                    alert('File size exceeds the limit of ' + maxSizeKB + ' KB.');
+                    input.value = ''; // Clear the file input
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function handleSubmit() {
+            // Show loading overlay when form is submitted
+            document.getElementById('loadingOverlay').style.display = 'block';
+            return true; // Allow form submission to continue
+        }
+
         function validateForm() {
             // reCAPTCHA validation
             var recaptchaResponse = grecaptcha.getResponse();
@@ -248,13 +265,13 @@ body {
             }
 
             // Field validation for special characters
-            var fields = ['name', 'fathers_name', 'others_name', 'address'];
+            var fields = ['name', 'fathers_name', 'mothers_name', 'address'];
             var specialCharPattern = /[^a-zA-Z0-9\s]/;
 
             for (var i = 0; i < fields.length; i++) {
                 var field = document.getElementById(fields[i]);
                 if (specialCharPattern.test(field.value)) {
-                    alert("Please remove special characters from the ${fields[i].replace('_', ')} field.");
+                    alert("Please remove special characters from the " + fields[i].replace('_', ' ') + " field.");
                     return false;
                 }
             }
