@@ -6,6 +6,8 @@
     <title>Child Records</title>
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Cropper.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
     <style>
         body {
             padding: 20px;
@@ -13,6 +15,9 @@
         .table-img {
             width: 100px;
             height: auto;
+        }
+        .cropper-container {
+            max-width: 100%;
         }
     </style>
 </head>
@@ -33,6 +38,7 @@
                     <th>Child's Photo</th>
                     <th>Father's Photo</th>
                     <th>Mother's Photo</th>
+                    <th>Edit</th>
                 </tr>
             </thead>
             <tbody>
@@ -46,21 +52,153 @@
                     <td>{{ child.fathers_mobile }}</td>
                     <td>{{ child.mothers_mobile }}</td>
                     <td>{{ child.emergency_contact }}</td>
-                    <!-- Use file_id instead of filename -->
-                                        
-                    <td><img src="{{ url_for('uploaded_file', file_id=child.child_photo_id) }}" class="table-img"></td>
-                    <td><img src="{{ url_for('uploaded_file', file_id=child.father_photo_id) }}" class="table-img"></td>
-                    <td><img src="{{ url_for('uploaded_file', file_id=child.mother_photo_id) }}" class="table-img"></td>
-
-                     </tr>    
+                    <td><img src="{{ url_for('uploaded_file', file_id=child.child_photo_id) }}" class="table-img" id="childPhotoImg{{ child._id }}"></td>
+                    <td><img src="{{ url_for('uploaded_file', file_id=child.father_photo_id) }}" class="table-img" id="fatherPhotoImg{{ child._id }}"></td>
+                    <td><img src="{{ url_for('uploaded_file', file_id=child.mother_photo_id) }}" class="table-img" id="motherPhotoImg{{ child._id }}"></td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editModal"
+                            data-id="{{ child._id }}"
+                            data-child-photo-url="{{ url_for('uploaded_file', file_id=child.child_photo_id) }}"
+                            data-father-photo-url="{{ url_for('uploaded_file', file_id=child.father_photo_id) }}"
+                            data-mother-photo-url="{{ url_for('uploaded_file', file_id=child.mother_photo_id) }}">
+                            Edit
+                        </button>
+                    </td>
+                </tr>    
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Edit Photos</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm" method="POST" enctype="multipart/form-data" action="{{ url_for('update_photos') }}">
+                        <input type="hidden" name="child_id" id="child_id">
+                        <input type="hidden" name="child_photo_cropped" id="child_photo_cropped">
+                        <input type="hidden" name="father_photo_cropped" id="father_photo_cropped">
+                        <input type="hidden" name="mother_photo_cropped" id="mother_photo_cropped">
+                        <div class="form-group">
+                            <label for="child_photo">Child's Photo</label>
+                            <input type="file" class="form-control-file" name="child_photo" id="child_photo" accept="image/*">
+                            <div id="child_photo_preview" class="mt-2" style="max-width: 300px;"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="father_photo">Father's Photo</label>
+                            <input type="file" class="form-control-file" name="father_photo" id="father_photo" accept="image/*">
+                            <div id="father_photo_preview" class="mt-2" style="max-width: 300px;"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="mother_photo">Mother's Photo</label>
+                            <input type="file" class="form-control-file" name="mother_photo" id="mother_photo" accept="image/*">
+                            <div id="mother_photo_preview" class="mt-2" style="max-width: 300px;"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Photos</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Cropper.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
+    <script>
+        let childCropper, fatherCropper, motherCropper;
+
+        function initCropper(image, previewId, croppedInputId, cropperInstance) {
+            const preview = document.getElementById(previewId);
+            const croppedInput = document.getElementById(croppedInputId);
+
+            if (cropperInstance) {
+                cropperInstance.destroy();
+            }
+
+            cropperInstance = new Cropper(image, {
+                aspectRatio: 1,
+                viewMode: 1,
+                crop: function(event) {
+                    croppedInput.value = cropperInstance.getCroppedCanvas().toDataURL();
+                }
+            });
+        }
+
+        $('#editModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var childPhotoUrl = button.data('child-photo-url');
+            var fatherPhotoUrl = button.data('father-photo-url');
+            var motherPhotoUrl = button.data('mother-photo-url');
+            var childId = button.data('id');
+
+            var modal = $(this);
+            modal.find('#child_id').val(childId);
+            modal.find('#child_photo_preview').html('<img id="child_image" src="' + childPhotoUrl + '" style="max-width:100%;">');
+            modal.find('#father_photo_preview').html('<img id="father_image" src="' + fatherPhotoUrl + '" style="max-width:100%;">');
+            modal.find('#mother_photo_preview').html('<img id="mother_image" src="' + motherPhotoUrl + '" style="max-width:100%;">');
+
+            // Initialize Cropper for each photo
+            initCropper(document.getElementById('child_image'), 'child_photo_preview', 'child_photo_cropped', childCropper);
+            initCropper(document.getElementById('father_image'), 'father_photo_preview', 'father_photo_cropped', fatherCropper);
+            initCropper(document.getElementById('mother_image'), 'mother_photo_preview', 'mother_photo_cropped', motherCropper);
+        });
+
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Create a FormData object
+            var formData = new FormData(this);
+
+            // Convert base64 to Blob
+            function base64ToBlob(base64, mimeType) {
+                var byteString = atob(base64.split(',')[1]);
+                var ab = new ArrayBuffer(byteString.length);
+                var ia = new Uint8Array(ab);
+                for (var i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+                return new Blob([ab], {type: mimeType});
+            }
+
+            // Add the cropped image data to the FormData as files
+            if (document.getElementById('child_photo_cropped').value) {
+                formData.set('child_photo', base64ToBlob(document.getElementById('child_photo_cropped').value, 'image/png'), 'child_photo.png');
+            }
+            if (document.getElementById('father_photo_cropped').value) {
+                formData.set('father_photo', base64ToBlob(document.getElementById('father_photo_cropped').value, 'image/png'), 'father_photo.png');
+            }
+            if (document.getElementById('mother_photo_cropped').value) {
+                formData.set('mother_photo', base64ToBlob(document.getElementById('mother_photo_cropped').value, 'image/png'), 'mother_photo.png');
+            }
+
+            // Send the form data to the server using fetch
+            fetch(this.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                // Close the modal
+                $('#editModal').modal('hide');
+                // Refresh the page
+                location.reload();
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
 </body>
 </html>
-

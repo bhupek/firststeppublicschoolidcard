@@ -1,6 +1,7 @@
 from flask import Flask, request, redirect, url_for, render_template, flash, send_from_directory
 import os
 
+from flask.json import jsonify
 from flask_pymongo import PyMongo
 import gridfs
 from bson import ObjectId
@@ -75,16 +76,6 @@ def submit():
         return redirect(url_for('index'))
 
     # Validate file sizes (max 500 KB)
-    max_file_size = 500 * 1024  # 500 KB in bytes
-
-    def validate_file(file):
-        if file and file.content_length > max_file_size:
-            flash(f"File '{file.filename}' exceeds the maximum size limit of 500 KB.", "error")
-            return False
-        return True
-
-    if not all(validate_file(file) for file in [child_photo, father_photo, mother_photo]):
-        return redirect(url_for('index'))
 
     # Construct filenames
     def construct_filename(base_name, identifier):
@@ -124,6 +115,74 @@ def submit():
     # Redirect to the ID card view with the populated details
     return render_template('id_card.html', **child_data)
 
+@app.route('/update_photos', methods=['POST'])
+def update_photos():
+    child_id = request.form.get('child_id')
+    child_photo = request.files.get('child_photo')
+    father_photo = request.files.get('father_photo')
+    mother_photo = request.files.get('mother_photo')
+
+    def construct_filename(base_name, identifier):
+        safe_base_name = re.sub(r'[^a-zA-Z0-9_]', '_', base_name)
+        return f"{safe_base_name}_{identifier}.png"
+
+    def upload_file(file, identifier):
+        if file and file.filename != '':
+            filename = construct_filename('photo', identifier)
+            file_id = fs.put(file.read(), filename=filename, content_type=file.content_type)
+            return file_id
+        return None
+
+    child_data = mongo.db.children.find_one({"_id": ObjectId(child_id)})
+    if not child_data:
+        return jsonify({"success": False, "message": "Child record not found."}), 404
+
+    child_photo_id = upload_file(child_photo, 'child') or child_data.get('child_photo_id')
+    father_photo_id = upload_file(father_photo, 'father') or child_data.get('father_photo_id')
+    mother_photo_id = upload_file(mother_photo, 'mother') or child_data.get('mother_photo_id')
+
+    mongo.db.children.update_one(
+        {"_id": ObjectId(child_id)},
+        {"$set": {
+            "child_photo_id": child_photo_id,
+            "father_photo_id": father_photo_id,
+            "mother_photo_id": mother_photo_id
+        }}
+    )
+
+    return jsonify({"success": True, "message": "Photos updated successfully."})
+
+
+@app.route('/update_all_photos', methods=['POST'])
+def update_all_photos():
+    # Helper function to validate ObjectId
+    def is_valid_objectid(oid):
+        return len(oid) == 24 and re.match('^[a-fA-F0-9]{24}$', oid)
+    
+    for key, file in request.files.items():
+        if file and file.filename != '':
+            try:
+                child_id, photo_type = key.rsplit('_', 1)
+                
+                if not is_valid_objectid(child_id):
+                    return jsonify({"success": False, "message": f"Invalid child_id: {child_id}"}), 400
+                
+                child_id = ObjectId(child_id)
+                filename = f"{photo_type}_{child_id}.png"
+                
+                file_id = fs.put(file.read(), filename=filename, content_type=file.content_type)
+                
+                # Update the specific photo field for this child
+                mongo.db.children.update_one(
+                    {"_id": child_id},
+                    {"$set": {f"{photo_type}_id": file_id}}
+                )
+            except Exception as e:
+                return jsonify({"success": False, "message": str(e)}), 500
+
+    return jsonify({"success": True, "message": "All photos updated successfully."})
+
+
 import bson 
 @app.route('/uploads/<file_id>')
 def uploaded_file(file_id):
@@ -147,6 +206,7 @@ def uploaded_file(file_id):
 
 @app.route('/records')
 def records():
+    # children = mongo.db.children.find()
     children = mongo.db.children.find()
     return render_template('records.html', children=children)
 
